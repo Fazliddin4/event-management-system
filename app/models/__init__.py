@@ -1,1 +1,3 @@
-from .models import RegistrationStatus, User, Event, EventRegistration
+from app.models.models import User, Event, EventRegistration
+
+__all__ = ["User", "Event", "EventRegistration"]

@@ -1,18 +1,20 @@
 from typing import Annotated
 
 from fastapi import Depends, HTTPException
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
 from app.database import SessionLocal
 from app.models import User
-from app.utils import ALGORITHM, SECRET_KEY
+from app.settings import ALGORITHM, SECRET_KEY
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
+# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
+dbearer_scheme = HTTPBearer(auto_error=False)
 
 
-
+async def pagination_depedency(q: str | None = None, offset: int = 0, limit: int = 100):
+    return {"q": q, "offset": offset, "limit": limit}
 
 
 def get_db():
@@ -23,14 +25,21 @@ def get_db():
         db.close()
 
 
-
+pagination_dep = Annotated[dict, Depends(pagination_depedency)]
 db_dep = Annotated[Session, Depends(get_db)]
-oauth2_dep = Annotated[str, Depends(oauth2_scheme)]
+# oauth2_dep = Annotated[str, Depends(oauth2_scheme)]
 
 
-def get_current_user(db: db_dep, token: oauth2_dep):
-    print("OAuth2 token extracted:", token)
+def get_current_user(db: db_dep, credentials: HTTPAuthorizationCredentials = Depends(dbearer_scheme)):
+    credentials_exception = HTTPException(
+        status_code=401,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
 
+    if credentials is None:
+        raise credentials_exception
+    token = credentials.credentials
     try:
         payload = jwt.decode(
             token=token,
@@ -38,8 +47,6 @@ def get_current_user(db: db_dep, token: oauth2_dep):
             algorithms=[ALGORITHM],
             options={"verify_exp": True},
         )
-
-        print("Decoded payload:", payload)
 
         email: str = payload.get("email")
         if email is None:

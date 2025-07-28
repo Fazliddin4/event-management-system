@@ -1,65 +1,67 @@
+from pydantic import BaseModel, EmailStr
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, Field
 
-
-class UserRegister(BaseModel):
+class UserRegisterIn(BaseModel):
     username: str
-    email: EmailStr
-    password: str = Field(min_length=8, max_length=16)
-
-    model_config = {
-        "from_attributes": True,
-        "json_schema_extra": {
-            "example": {
-                "username": "book_admin",
-                "email": "admin@bookla.com",
-                "password": "password123"
-            }
-        },
-    }
-
-class UserRegisterOut(BaseModel):
-    id: int
-    username: str | None = None
-    email: EmailStr 
-    is_active: bool
-    is_verified: bool    
-    created_at: datetime
-
-    model_config = {
-        "from_attributes": True,
-        "json_schema_extra": {
-            "example": {
-                "id": 2,
-                "username": "username",
-                "email": "user@gmail.com",
-                "is_active": True,
-                "is_verified": True,
-                "created_at": "2025-01-01 13:00:00.000",
-            }
-        },
-    }
-
-
-
-
-
-class UserJWTLogin(BaseModel): 
     email: EmailStr
     password: str
 
 
+class UserOut(BaseModel):
+    id: int
+    email: EmailStr
+    username: str | None = None
+    is_active: bool
+    created_at: datetime
 
-class JWTRefreshIn(BaseModel):
+
+class TokenIn(BaseModel):
     refresh_token: str
 
 
-class TokenResponse(BaseModel):
-    email: EmailStr
+class TokenOut(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
 
+class EventCreateIn(BaseModel):
+    title: str
+    description: str | None = None
+    start_datetime: datetime
+    end_datetime: datetime
+    location: str | None = None
+    max_participants: int | None = 100
 
+class EventUpdate(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    start_datetime: datetime | None = None
+    end_datetime: datetime | None = None
+    location: str | None = None
+    max_participants: int | None = None
+    is_active: bool | None = True
+
+class EventOut(BaseModel):
+    id: int
+    title: str
+    description: str | None = None
+    start_datetime: datetime
+    end_datetime: datetime
+    location: str | None = None
+    max_participants: int | None = 100
+    is_active: bool
+    created_at: datetime
+
+class EventRegistrationCreateIn(BaseModel):
+    user_id: int
+    event_id: int
+    status: str | None = "waitlist"
+
+class EventRegistrationOut(BaseModel):
+    id: int
+    user_id: int
+    event_id: int
+    registered_at: datetime
+    status: str
 
